@@ -1,4 +1,4 @@
-Name: Build PIECE OF PAST 8 APK
+name: Build PIECE OF PAST 8 APK
 
 on:
   workflow_dispatch:
