@@ -1,45 +1,153 @@
-name: Build APK
+name: Build PIECE OF PAST 8 APK
 
 on:
-  push:
-    branches: [ main, master ]
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
 
 jobs:
-  build:
+  build-apk:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
+
+      # 1. Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 22
+      # 2. Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Set up JDK 21
+      # 3. Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
 
+      # 4. NPM paketlerini kur
+      - name: Install dependencies
+        run: npm install
+
+      # 5. www klasörünü kontrol et
+      - name: Check web files
+        run: |
+          echo "www klasörü:"
+          ls -lah www
+
+          test -f www/index.html
+
+          echo "www/index.html bulundu."
+
+      # 6. Android platformunu oluştur
       - name: Add Android platform
-        run: npx cap add android
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          else
+            echo "android klasörü zaten mevcut."
+          fi
 
-      - name: Sync web assets into Android project
+      # 7. Capacitor sync
+      - name: Capacitor sync
         run: npx cap sync android
 
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
+      # 8. Launcher ikonlarını yükle
+      - name: Install PIECE OF PAST 8 launcher icons
+        run: |
+          echo "Installing PIECE OF PAST 8 icons..."
 
-      - name: Build debug APK
-        run: cd android && ./gradlew assembleDebug --no-daemon
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
 
-      - name: Upload APK
+          cp android-icons/mipmap-mdpi/ic_launcher.png \
+             android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+
+          cp android-icons/mipmap-hdpi/ic_launcher.png \
+             android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+
+          cp android-icons/mipmap-xhdpi/ic_launcher.png \
+             android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+
+          cp android-icons/mipmap-xxhdpi/ic_launcher.png \
+             android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+
+          cp android-icons/mipmap-xxxhdpi/ic_launcher.png \
+             android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+
+          # Round ikon
+          cp android-icons/mipmap-mdpi/ic_launcher.png \
+             android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+
+          cp android-icons/mipmap-hdpi/ic_launcher.png \
+             android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+
+          cp android-icons/mipmap-xhdpi/ic_launcher.png \
+             android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+
+          cp android-icons/mipmap-xxhdpi/ic_launcher.png \
+             android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+
+          cp android-icons/mipmap-xxxhdpi/ic_launcher.png \
+             android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+
+          echo "Icons installed successfully."
+
+      # 9. Adaptive ikon çakışmalarını kaldır
+      - name: Remove adaptive launcher icons
+        run: |
+          rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+
+          rm -f android/app/src/main/res/mipmap-anydpi/ic_launcher.xml
+          rm -f android/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml
+
+          echo "Adaptive launcher icons removed."
+
+      # 10. Android ikonlarını kontrol et
+      - name: Verify launcher icons
+        run: |
+          test -f android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          test -f android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          test -f android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          test -f android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          test -f android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+
+          echo "All PIECE OF PAST 8 icons verified."
+
+      # 11. APK oluştur
+      - name: Build PIECE OF PAST 8 Debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace --no-daemon
+
+      # 12. APK Artifact
+      - name: Upload PIECE OF PAST 8 APK
         uses: actions/upload-artifact@v4
         with:
           name: piece-of-past-8-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      # 13. GitHub Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: PIECE OF PAST 8 - Build ${{ github.run_number }}
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
