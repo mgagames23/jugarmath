@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: write
+  pages: write      # GitHub Pages yayını için gerekli
+  id-token: write   # GitHub Pages yayını için gerekli
 
 jobs:
   build-apk:
@@ -37,7 +39,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # --- EKLENEN ADIM ---
       # 5. Web uygulamasını oluştur (Build)
       - name: Build web app
         run: npm run build
@@ -156,3 +157,11 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- EKLENEN GitHub Pages Yayınlama Adımı ---
+      # 15. GitHub Pages Yayını (www klasörünü gh-pages dalına gönderir)
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./www
