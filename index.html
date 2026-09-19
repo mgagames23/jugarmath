@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>PIECE OF PAST 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EDE6DA;
+    --card-bg:#FFFDF8;
+    --ink:#2B1E14;
+    --ink-soft:#7A6952;
+    --walnut-300:#A97A4B;
+    --walnut-500:#8B5A2B;
+    --walnut-700:#6B4226;
+    --walnut-900:#3E2517;
+    --ivory:#F3E9D2;
+    --brass:#C9A227;
+    --ring:rgba(62,37,23,.14);
+    --shadow-col:rgba(62,37,23,.22);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#17110B;
+      --card-bg:#241A11;
+      --ink:#F3E9D2;
+      --ink-soft:#C9B79C;
+      --ring:rgba(243,233,210,.12);
+      --walnut-300:#7C5330;
+      --walnut-500:#6B4226;
+      --walnut-700:#4A2C18;
+      --walnut-900:#20130A;
+      --shadow-col:rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#17110B;
+    --card-bg:#241A11;
+    --ink:#F3E9D2;
+    --ink-soft:#C9B79C;
+    --ring:rgba(243,233,210,.12);
+    --walnut-300:#7C5330;
+    --walnut-500:#6B4226;
+    --walnut-700:#4A2C18;
+    --walnut-900:#20130A;
+    --shadow-col:rgba(0,0,0,.55);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:30px 16px 44px;
+  }
+  .page{
+    width:100%;
+    max-width:400px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:22px;
+  }
+  header{ text-align:center; }
+  h1{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:clamp(26px,7vw,32px);
+    margin:0 0 8px;
+    letter-spacing:-.01em;
+  }
+  .sub{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:15px;
+    line-height:1.5;
+    max-width:30ch;
+    margin-inline:auto;
+  }
+
+  .wheel-wrap{
+    position:relative;
+    width:100%;
+    max-width:320px;
+    touch-action:none;
+  }
+  svg{ display:block; width:100%; height:auto; user-select:none; -webkit-user-select:none; overflow:visible; }
+  svg .stage-shadow{ filter:drop-shadow(0 16px 28px var(--shadow-col)); }
+
+  .outerDisc{ fill:url(#woodOuter); stroke:rgba(0,0,0,.35); stroke-width:2; }
+  .innerDisc{ fill:url(#woodInner); stroke:rgba(0,0,0,.35); stroke-width:1; }
+  .tick{ stroke:rgba(0,0,0,.28); stroke-width:1; }
+  .stopA1{ stop-color:var(--walnut-300); }
+  .stopA2{ stop-color:var(--walnut-700); }
+  .stopA3{ stop-color:var(--walnut-900); }
+  .stopB1{ stop-color:var(--walnut-500); }
+  .stopB2{ stop-color:var(--walnut-900); }
+
+  .num{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    fill:var(--ivory);
+    text-anchor:middle;
+    dominant-baseline:middle;
+    pointer-events:none;
+  }
+  .numA{ font-size:26px; }
+  .numB{ font-size:23px; opacity:.92; }
+  .hubBezel{ fill:none; stroke:var(--brass); stroke-width:3; }
+  .hubWindow{ fill:var(--walnut-900); stroke:rgba(0,0,0,.4); stroke-width:1; }
+  .centerNum{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:700;
+    fill:#FFFFFF;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    pointer-events:none;
+    font-size:32px;
+    transition:transform .25s ease;
+    transform-box:fill-box;
+    transform-origin:center;
+  }
+  .centerNum.pop{ transform:scale(1.12); }
+  #hubTap{ cursor:default; }
+  #hubTap.tappable{ cursor:pointer; }
+  .pointer{ fill:var(--brass); }
+  .pointer-line{ stroke:var(--brass); stroke-width:1.5; stroke-dasharray:1 4; opacity:.8; }
+  .wheel-snap{ transition:transform .35s cubic-bezier(.2,.8,.2,1); }
+
+  .controls{ display:flex; gap:12px; width:100%; }
+  .stepper{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--card-bg);
+    border:1px solid var(--ring);
+    border-radius:14px;
+    padding:8px 10px;
+  }
+  .stepper button{
+    width:34px;height:34px;
+    border-radius:10px;
+    border:none;
+    background:var(--walnut-700);
+    color:var(--ivory);
+    font-size:18px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .stepper button:active{ transform:scale(.94); }
+  .stepper .val{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:20px;
+    min-width:26px;
+    text-align:center;
+  }
+  .stepper.a .val{ color:var(--brass); }
+  .stepper.b .val{ color:var(--walnut-500); }
+
+  .readout{
+    width:100%;
+    background:var(--card-bg);
+    border:1px solid var(--ring);
+    border-radius:20px;
+    padding:22px 18px;
+    text-align:center;
+  }
+  .equation{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:clamp(30px,9vw,40px);
+    letter-spacing:-.01em;
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .equation .a{ color:var(--brass); }
+  .equation .b{ color:var(--walnut-500); }
+  .equation .op, .equation .eq{ color:var(--ink-soft); font-weight:500; font-size:.68em; }
+  .equation .product{ min-width:1.3em; display:inline-block; transition:transform .25s ease; cursor:default; }
+  .equation .product.hidden-answer{ color:var(--ink-soft); cursor:pointer; }
+  .equation .product.pop{ transform:scale(1.18); }
+  .hint{ margin:10px 0 0; font-size:13px; color:var(--ink-soft); }
+
+  .quiz-toggle{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:none;
+    border:1px solid var(--ring);
+    border-radius:999px;
+    padding:9px 18px;
+    font-family:'Manrope',sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .quiz-toggle .dot{ width:9px;height:9px;border-radius:50%; background:var(--ring); }
+  .quiz-toggle.on .dot{ background:var(--brass); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Çarpım Çarkı</h1>
+    <p class="sub">Çarkları parmağınla çevir, ortadaki kutuda çarpımı izle.</p>
+  </header>
+
+  <div class="wheel-wrap">
+    <svg id="board" viewBox="0 0 320 320" class="stage-shadow">
+      <defs>
+        <radialGradient id="woodOuter" cx="32%" cy="28%" r="85%">
+          <stop class="stopA1" offset="0%"/>
+          <stop class="stopA2" offset="55%"/>
+          <stop class="stopA3" offset="100%"/>
+        </radialGradient>
+        <radialGradient id="woodInner" cx="32%" cy="28%" r="85%">
+          <stop class="stopB1" offset="0%"/>
+          <stop class="stopB2" offset="100%"/>
+        </radialGradient>
+      </defs>
+
+      <circle class="outerDisc" cx="160" cy="160" r="152"/>
+      <g id="ticks"></g>
+
+      <circle class="innerDisc" cx="160" cy="160" r="96"/>
+
+      <g id="wheelA"></g>
+      <g id="wheelB"></g>
+
+      <g id="hubTap">
+        <circle class="hubWindow" cx="160" cy="160" r="40"/>
+        <circle class="hubBezel" cx="160" cy="160" r="42"/>
+        <text id="centerResult" class="centerNum" x="160" y="160">40</text>
+      </g>
+
+      <line class="pointer-line" x1="160" y1="14" x2="160" y2="118"/>
+      <path class="pointer" d="M160,2 L152,17 L168,17 Z"/>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <div class="stepper a">
+      <button id="aMinus" aria-label="Dış çarkı azalt">−</button>
+      <span class="val" id="aVal">5</span>
+      <button id="aPlus" aria-label="Dış çarkı artır">+</button>
+    </div>
+    <div class="stepper b">
+      <button id="bMinus" aria-label="İç çarkı azalt">−</button>
+      <span class="val" id="bVal">8</span>
+      <button id="bPlus" aria-label="İç çarkı artır">+</button>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="equation">
+      <span class="a" id="eqA">5</span>
+      <span class="op">×</span>
+      <span class="b" id="eqB">8</span>
+      <span class="eq">=</span>
+      <span class="product" id="eqProduct">40</span>
+    </div>
+    <p class="hint" id="hint">Dış çark altın renkli, iç çark koyu renkli sayıyı gösterir.</p>
+  </div>
+
+  <button class="quiz-toggle" id="quizToggle">
+    <span class="dot"></span>
+    <span id="quizLabel">Alıştırma modu kapalı</span>
+  </button>
+</div>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById('board');
+  const cx = 160, cy = 160;
+  const rA = 116, rB = 64;
+  const step = 40; // 360 / 9 numbers
+  const tickDeg = 5; // finer click spacing while dragging
+
+  // cark.mp3 must sit next to this index.html (i.e. in www/cark.mp3)
+  const clickSound = new Audio('cark.mp3');
+  clickSound.preload = 'auto';
+  function ensureAudio(){
+    // kept as a no-op so the rest of the code doesn't need to change;
+    // HTML5 Audio doesn't need an unlock step the way Web Audio does.
+  }
+  function playTick(strong){
+    try{
+      const s = clickSound.cloneNode(true);
+      s.volume = strong ? 1 : 0.5;
+      s.play().catch(()=>{});
+    }catch(e){}
+  }
+
+  function polar(r, angleDeg){
+    const rad = angleDeg * Math.PI/180;
+    return { x: cx + r*Math.sin(rad), y: cy - r*Math.cos(rad) };
+  }
+
+  function buildWheel(groupId, radius, cls){
+    const g = document.getElementById(groupId);
+    for(let k=1;k<=9;k++){
+      const baseAngle = (k-1)*step;
+      const p = polar(radius, baseAngle);
+      const t = document.createElementNS(NS,'text');
+      t.setAttribute('class','num '+cls);
+      t.setAttribute('x', p.x.toFixed(2));
+      t.setAttribute('y', p.y.toFixed(2));
+      t.setAttribute('transform', `rotate(${baseAngle} ${p.x.toFixed(2)} ${p.y.toFixed(2)})`);
+      t.textContent = k;
+      g.appendChild(t);
+    }
+  }
+  buildWheel('wheelA', rA, 'numA');
+  buildWheel('wheelB', rB, 'numB');
+
+  const ticks = document.getElementById('ticks');
+  for(let i=0;i<72;i++){
+    const a = i*5;
+    const p1 = polar(150, a);
+    const p2 = polar(143, a);
+    const line = document.createElementNS(NS,'line');
+    line.setAttribute('class','tick');
+    line.setAttribute('x1',p1.x.toFixed(2));
+    line.setAttribute('y1',p1.y.toFixed(2));
+    line.setAttribute('x2',p2.x.toFixed(2));
+    line.setAttribute('y2',p2.y.toFixed(2));
+    ticks.appendChild(line);
+  }
+
+  function norm(a){ return ((a%360)+360)%360; }
+  function numberAtTop(rotation){
+    const netAngle = norm(-rotation);
+    const idx = Math.round(netAngle/step) % 9;
+    return idx+1;
+  }
+  function rotationForNumber(k){
+    const netAngle = (k-1)*step;
+    return norm(-netAngle);
+  }
+
+  const wheels = {
+    A: { el: document.getElementById('wheelA'), rotation: rotationForNumber(5), dragging:false, startAngle:0, startRotation:0, pointerId:null, lastTickUnit:0 },
+    B: { el: document.getElementById('wheelB'), rotation: rotationForNumber(8), dragging:false, startAngle:0, startRotation:0, pointerId:null, lastTickUnit:0 }
+  };
+
+  function applyRotation(key, animate){
+    const w = wheels[key];
+    w.el.classList.toggle('wheel-snap', !!animate);
+    w.el.setAttribute('transform', `rotate(${w.rotation} ${cx} ${cy})`);
+  }
+  applyRotation('A', false);
+  applyRotation('B', false);
+
+  let quizMode = false;
+  let revealed = false;
+
+  function updateReadout(pop){
+    const kA = numberAtTop(wheels.A.rotation);
+    const kB = numberAtTop(wheels.B.rotation);
+    document.getElementById('aVal').textContent = kA;
+    document.getElementById('bVal').textContent = kB;
+    document.getElementById('eqA').textContent = kA;
+    document.getElementById('eqB').textContent = kB;
+    const productEl = document.getElementById('eqProduct');
+    const centerEl = document.getElementById('centerResult');
+    const hubTap = document.getElementById('hubTap');
+    const hidden = quizMode && !revealed;
+    hubTap.classList.toggle('tappable', hidden);
+    if(hidden){
+      productEl.textContent = '?';
+      productEl.classList.add('hidden-answer');
+      centerEl.textContent = '?';
+    } else {
+      const product = kA*kB;
+      productEl.textContent = product;
+      productEl.classList.remove('hidden-answer');
+      centerEl.textContent = product;
+      if(pop){
+        productEl.classList.remove('pop');
+        void productEl.offsetWidth;
+        productEl.classList.add('pop');
+        centerEl.classList.remove('pop');
+        void centerEl.offsetWidth;
+        centerEl.classList.add('pop');
+      }
+    }
+  }
+  updateReadout(false);
+
+  function angleFromEvent(evt){
+    const pt = svg.createSVGPoint();
+    pt.x = evt.clientX; pt.y = evt.clientY;
+    const ctm = svg.getScreenCTM().inverse();
+    const loc = pt.matrixTransform(ctm);
+    const dx = loc.x - cx, dy = loc.y - cy;
+    const dist = Math.sqrt(dx*dx+dy*dy);
+    const angle = norm(Math.atan2(dx, -dy) * 180/Math.PI);
+    return { angle, dist };
+  }
+
+  function pointerDown(evt){
+    const { angle, dist } = angleFromEvent(evt);
+    ensureAudio();
+    let key = null;
+    if(dist <= 44){
+      key = null;
+    } else if(dist <= 96){
+      key = 'B';
+    } else if(dist <= 158){
+      key = 'A';
+    }
+    if(!key) return;
+    const w = wheels[key];
+    w.dragging = true;
+    w.startAngle = angle;
+    w.startRotation = w.rotation;
+    w.pointerId = evt.pointerId;
+    w.lastTickUnit = Math.floor(w.rotation/tickDeg);
+    w.el.classList.remove('wheel-snap');
+    svg.setPointerCapture(evt.pointerId);
+    evt.preventDefault();
+  }
+
+  function pointerMove(evt){
+    ['A','B'].forEach(key=>{
+      const w = wheels[key];
+      if(w.dragging && w.pointerId === evt.pointerId){
+        const { angle } = angleFromEvent(evt);
+        const delta = angle - w.startAngle;
+        w.rotation = norm(w.startRotation + delta);
+        applyRotation(key, false);
+        const unit = Math.floor(w.rotation/tickDeg);
+        if(unit !== w.lastTickUnit){
+          w.lastTickUnit = unit;
+          playTick(false);
+        }
+        updateReadout(false);
+      }
+    });
+  }
+
+  function pointerUp(evt){
+    ['A','B'].forEach(key=>{
+      const w = wheels[key];
+      if(w.dragging && w.pointerId === evt.pointerId){
+        w.dragging = false;
+        w.rotation = Math.round(w.rotation/step)*step % 360;
+        applyRotation(key, true);
+        playTick(true);
+        revealed = false;
+        updateReadout(true);
+      }
+    });
+  }
+
+  svg.addEventListener('pointerdown', pointerDown);
+  svg.addEventListener('pointermove', pointerMove);
+  svg.addEventListener('pointerup', pointerUp);
+  svg.addEventListener('pointercancel', pointerUp);
+
+  function stepWheel(key, dir){
+    ensureAudio();
+    const w = wheels[key];
+    w.rotation = norm(w.rotation - dir*step);
+    applyRotation(key, true);
+    playTick(true);
+    revealed = false;
+    updateReadout(true);
+  }
+  document.getElementById('aPlus').addEventListener('click', ()=>stepWheel('A',1));
+  document.getElementById('aMinus').addEventListener('click', ()=>stepWheel('A',-1));
+  document.getElementById('bPlus').addEventListener('click', ()=>stepWheel('B',1));
+  document.getElementById('bMinus').addEventListener('click', ()=>stepWheel('B',-1));
+
+  document.getElementById('eqProduct').addEventListener('click', ()=>{
+    if(quizMode && !revealed){
+      revealed = true;
+      updateReadout(true);
+    }
+  });
+  document.getElementById('hubTap').addEventListener('click', ()=>{
+    if(quizMode && !revealed){
+      revealed = true;
+      updateReadout(true);
+    }
+  });
+
+  const quizBtn = document.getElementById('quizToggle');
+  quizBtn.addEventListener('click', ()=>{
+    quizMode = !quizMode;
+    revealed = false;
+    quizBtn.classList.toggle('on', quizMode);
+    document.getElementById('quizLabel').textContent = quizMode ? 'Alıştırma modu açık' : 'Alıştırma modu kapalı';
+    document.getElementById('hint').textContent = quizMode
+      ? 'Sonucu görmek için ortadaki “?” işaretine dokun.'
+      : 'Dış çark altın renkli, iç çark koyu renkli sayıyı gösterir.';
+    updateReadout(false);
+  });
+})();
+</script>
+</body>
+</html>
