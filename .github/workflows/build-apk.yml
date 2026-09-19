@@ -1,4 +1,4 @@
-name: Build PIECE OF PAST 8 APK
+Name: Build PIECE OF PAST 8 APK
 
 on:
   workflow_dispatch:
@@ -37,7 +37,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # 5. www klasörünü kontrol et
+      # --- EKLENEN ADIM ---
+      # 5. Web uygulamasını oluştur (Build)
+      - name: Build web app
+        run: npm run build
+
+      # 6. www klasörünü kontrol et
       - name: Check web files
         run: |
           echo "www klasörü:"
@@ -47,7 +52,7 @@ jobs:
 
           echo "www/index.html bulundu."
 
-      # 6. Android platformunu oluştur
+      # 7. Android platformunu oluştur
       - name: Add Android platform
         run: |
           if [ ! -d "android" ]; then
@@ -56,11 +61,11 @@ jobs:
             echo "android klasörü zaten mevcut."
           fi
 
-      # 7. Capacitor sync
+      # 8. Capacitor sync
       - name: Capacitor sync
         run: npx cap sync android
 
-      # 8. Launcher ikonlarını yükle
+      # 9. Launcher ikonlarını yükle
       - name: Install PIECE OF PAST 8 launcher icons
         run: |
           echo "Installing PIECE OF PAST 8 icons..."
@@ -104,7 +109,7 @@ jobs:
 
           echo "Icons installed successfully."
 
-      # 9. Adaptive ikon çakışmalarını kaldır
+      # 10. Adaptive ikon çakışmalarını kaldır
       - name: Remove adaptive launcher icons
         run: |
           rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
@@ -115,7 +120,7 @@ jobs:
 
           echo "Adaptive launcher icons removed."
 
-      # 10. Android ikonlarını kontrol et
+      # 11. Android ikonlarını kontrol et
       - name: Verify launcher icons
         run: |
           test -f android/app/src/main/res/mipmap-mdpi/ic_launcher.png
@@ -126,14 +131,14 @@ jobs:
 
           echo "All PIECE OF PAST 8 icons verified."
 
-      # 11. APK oluştur
+      # 12. APK oluştur
       - name: Build PIECE OF PAST 8 Debug APK
         working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace --no-daemon
 
-      # 12. APK Artifact
+      # 13. APK Artifact
       - name: Upload PIECE OF PAST 8 APK
         uses: actions/upload-artifact@v4
         with:
@@ -141,7 +146,7 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
-      # 13. GitHub Release
+      # 14. GitHub Release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
